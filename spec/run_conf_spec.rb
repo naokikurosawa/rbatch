@@ -5,14 +5,16 @@ require 'rbatch'
 
 describe RBatch::RunConf do
   before :all do
-    @config = File.join(Dir.tmpdir, ".rbatchrc")
+    @config = RBatch.run_conf_path
   end
 
   before :each do
+    FileUtils.rm @config if File.exists? @config
+    open( @config  , "w" ){|f| f.write("")}
+    RBatch.reload_run_conf
   end
 
   after :each do
-    FileUtils.rm @config if File.exists? @config
   end
 
   after :all do
@@ -23,7 +25,7 @@ describe RBatch::RunConf do
   end
 
   it "is default when run_conf does not exist" do
-    FileUtils.rm @config if File.exists? @config
+    FileUtils.rm @config
     expect(RBatch.run_conf[:log_dir]).to eq "log"
   end
 
@@ -37,8 +39,18 @@ describe RBatch::RunConf do
     expect(RBatch.run_conf[:log_dir]).to eq "hoge"
   end
 
-  it "raise when run_conf has unreserved words" do
+  it "raise when run_conf has unreserved key" do
     open( @config  , "w" ){|f| f.write("unreserved: hoge")}
     expect{RBatch.reload_run_conf}.to raise_error(RBatch::RunConf::Exception)
+  end
+
+  it "is set by []= method" do
+    expect(RBatch.run_conf[:log_dir]).to eq "log"
+    RBatch.run_conf[:log_dir] = "hoge"
+    expect(RBatch.run_conf[:log_dir]).to eq "hoge"
+  end
+
+  it "raise when set unreserved key by []= method" do
+    expect{RBatch.run_conf[:unreservied] = "hoge"}.to raise_error(RBatch::RunConf::Exception)
   end
 end

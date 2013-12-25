@@ -3,7 +3,7 @@ module RBatch
   class RunConf
     attr :opt,:yaml
     @@def_opt = {
-      :tmp_dir       => Dir.tmpdir,
+      :tmp_dir       => nil,
       :forbid_double_run => false,
       :log_name      => "<date>_<time>_<prog>.log",
       :log_conf      => "conf",
@@ -24,7 +24,7 @@ module RBatch
 
     def initialize(path)
       @opt = @@def_opt.clone
-
+      @opt[:tmp_dir] = Dir.tmpdir
       case RUBY_PLATFORM
       when /mswin|mingw/
         @opt[:log_hostname] =  ENV["COMPUTERNAME"] ? ENV["COMPUTERNAME"] : "unknownhost"
@@ -50,8 +50,17 @@ module RBatch
     end
 
     def[](key)
-      raise RBatch::RunConf::Exception, "Value of key=\"#{key}\" is nil" if @opt[key].nil?
+      if @opt[key].nil?
+        raise RBatch::RunConf::Exception, "Value of key=\"#{key}\" is nil"
+      end
       @opt[key]
+    end
+
+    def[]=(key,value)
+      if ! @opt.has_key?(key)
+        raise RBatch::RunConf::Exception, "Key=\"#{key}\" does not exist"
+      end
+      @opt[key]=value
     end
   end
   class RBatch::RunConf::Exception < Exception; end
