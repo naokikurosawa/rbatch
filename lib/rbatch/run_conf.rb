@@ -6,8 +6,8 @@ module RBatch
       :tmp_dir       => Dir.tmpdir,
       :forbid_double_run => false,
       :log_name      => "<date>_<time>_<prog>.log",
-      :log_conf      => nil,
-      :log_dir       => nil,
+      :log_conf      => "conf",
+      :log_dir       => "log",
       :log_append    => true,
       :log_level     => "info",
       :log_stdout    => false,
@@ -33,23 +33,19 @@ module RBatch
       else
         @opt[:log_hostname] = "unknownhost"
       end
-
-      @opt[:log_dir] = File.join(RBatch::home_dir , "log")
-      @opt[:conf_dir] = File.join(RBatch::home_dir , "conf")
-
       begin
         @yaml = YAML::load_file(path)
         if @yaml
-          @@def_opt.each_key do |key|
-            if @yaml[key.to_s] != nil
-              # use yaml
-              @opt[key] = @yaml[key.to_s]
+          @yaml.each_key do |key|
+            if @@def_opt.has_key?(key.to_sym)
+              @opt[key.to_sym]=@yaml[key]
             else
-              # use default
+              raise RBatch::RunConf::Exception, "\"#{key}\" is not available option"
             end
           end
         end
       rescue
+        # when run_conf does not exist, do nothing.
       end
     end
 
