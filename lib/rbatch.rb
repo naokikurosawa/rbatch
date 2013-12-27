@@ -2,7 +2,7 @@ $LOAD_PATH.unshift(File.expand_path(File.dirname(__FILE__)))
 require 'yaml'
 
 module RBatch
-  @@program_name = $PROGRAM_NAME
+  @@program_name = nil
   @@home_dir = nil
   @@run_conf_path = nil
   @@run_conf = nil
@@ -12,6 +12,7 @@ module RBatch
   def run_conf_path ; @@run_conf_path ; end
   def run_conf      ; @@run_conf ; end
   def init
+    @@program_name = File.basename($PROGRAM_NAME)
     if  ENV["RB_HOME"]
       @@home_dir = ENV["RB_HOME"]
     else
