@@ -101,7 +101,7 @@ describe RBatch::Config do
     it "success when common_conf_name changed" do
       conf=File.join(RBatch.ctrl.conf_dir,"global.yaml")
       open( conf  , "w" ){|f| f.write("key4: value4")}
-      open( RBatch.run_conf_path  , "w" ){|f| f.write("common_conf_name: global.yaml")}
+      open( RBatch.run_conf.path  , "w" ){|f| f.write("common_conf_name: global.yaml")}
       RBatch.init
       expect(RBatch.common_config["key4"]).to eq "value4"
     end

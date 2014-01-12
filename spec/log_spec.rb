@@ -10,7 +10,7 @@ describe RBatch::Log do
   end
 
   before :each do
-    open( RBatch.run_conf_path  , "w" ){|f| f.write("")}
+    open( RBatch.run_conf.path  , "w" ){|f| f.write("")}
     RBatch.run_conf.reload
   end
 
@@ -18,7 +18,7 @@ describe RBatch::Log do
     Dir::foreach(@dir) do |f|
       File::delete(File.join(@dir , f)) if ! (/\.+$/ =~ f)
     end
-    FileUtils.rm(RBatch.run_conf_path) if File.exist?(RBatch.run_conf_path)
+    FileUtils.rm(RBatch.run_conf.path) if File.exist?(RBatch.run_conf.path)
   end
 
   it "is run" do
@@ -270,7 +270,7 @@ describe RBatch::Log do
   describe "option by config" do
     it "change log name" do
       confstr = "log_name: name1.log"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new() do | log |
         log.info("hoge")
@@ -284,7 +284,7 @@ describe RBatch::Log do
       @tmp = File.join(ENV["RB_HOME"],"log2")
       Dir.mkdir(@tmp)
       confstr = "log_name: c.log\nlog_dir: " + @tmp
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new({:name => "c.log", :dir=> @tmp }) do | log |
         log.info("hoge")
@@ -296,7 +296,7 @@ describe RBatch::Log do
 
     it "is append mode" do
       confstr = "log_name: a.log\nlog_append: true"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new() do | log |
         log.info("line1")
@@ -313,7 +313,7 @@ describe RBatch::Log do
 
     it "is overwrite mode" do
       confstr = "log_name: a.log\nlog_append: false"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new() do | log |
         log.info("line1")
@@ -330,7 +330,7 @@ describe RBatch::Log do
 
     it "is warn level" do
       confstr = "log_name: a.log\nlog_level: warn"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new() do | log |
         log.debug("test_debug")
@@ -351,7 +351,7 @@ describe RBatch::Log do
 
     it "delete old log file which name include <date>" do
       confstr = "log_delete_old_log: true"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       loglist = [*0..20].map do |day|
         File.join(@dir , (Date.today - day).strftime("%Y%m%d") + "_test_delete.log")
@@ -371,7 +371,7 @@ describe RBatch::Log do
   describe "option by both argument and config" do
     it "is prior to argument than config" do
       confstr = "log_name: a.log"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       RBatch::Log.new({:name => "b.log"}) do | log |
         log.info("hoge")
@@ -417,7 +417,7 @@ describe RBatch::Log do
 
     it "option by config" do
       confstr = "log_name: e.log"
-      open( RBatch.run_conf_path  , "a" ){|f| f.write(confstr)}
+      open( RBatch.run_conf.path  , "a" ){|f| f.write(confstr)}
       RBatch.run_conf.reload
       log = RBatch::Log.new()
       log.info("hoge")
