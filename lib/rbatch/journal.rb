@@ -8,7 +8,7 @@ module RBatch
         @journal_verbose = 1
       end
     end
-    def journal(level,str)
+    def put(level,str)
       if level <= @journal_verbose
         str = "[RBatch] " + str
         puts str

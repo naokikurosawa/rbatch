@@ -13,6 +13,4 @@ describe "RBatch" do
 
   it "RB_HOME should be home_dir" do
   end
-
-
 end

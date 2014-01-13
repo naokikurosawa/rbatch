@@ -28,7 +28,11 @@ module RBatch
       "error" => Logger::ERROR,
       "fatal" => Logger::FATAL
     }
-    attr :path,:opt,:log,:stdout_log,:vars
+    @vars
+    @opt
+    @journal
+    @log
+    @stdout_log
 
     # Logging Block.
     # 
@@ -43,6 +47,7 @@ module RBatch
     #  }
     #
     def initialize(vars,opt = nil)
+      @opt = opt
       @vars = vars.clone
       if ! opt.nil?
         # change opt key from "hoge" to "log_hoge"
