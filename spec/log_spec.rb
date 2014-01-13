@@ -1,3 +1,4 @@
+require 'rbatch/journal'
 require 'rbatch/vars'
 require 'rbatch/log'
 require 'tmpdir'
@@ -8,11 +9,11 @@ describe RBatch::Log do
     @home = File.join(Dir.tmpdir, "rbatch_test_" + rand.to_s)
     @log_dir = File.join(@home,"log")
     ENV["RB_HOME"]=@home
-    ENV["RB_VERBOSE"]="0"
 
     Dir.mkdir(@home)
     Dir::mkdir(@log_dir)
     @vars = RBatch::Vars.new()
+    @journal = RBatch::Journal.new(0)
   end
 
   after :each do
@@ -27,7 +28,7 @@ describe RBatch::Log do
   end
 
   it "is run" do
-    RBatch::Log.new(@vars) do | log |
+    RBatch::Log.new(@vars,@journal) do | log |
       log.info("test_log")
     end
     Dir::foreach(@log_dir) do |f|
@@ -42,15 +43,15 @@ describe RBatch::Log do
   it "raise error when log dir does not exist" do
     Dir::rmdir(@log_dir)
     expect{
-      RBatch::Log.new(@vars) {|log|}
+      RBatch::Log.new(@vars,@journal) {|log|}
     }.to raise_error(RBatch::Log::Exception)
     Dir::mkdir(@log_dir)
   end
 
   it "run when log block is nested" do
-    RBatch::Log.new(@vars,{:name => "name1" }) do | log |
+    RBatch::Log.new(@vars,@journal,{:name => "name1" }) do | log |
       log.info("name1")
-      RBatch::Log.new(@vars,{:name => "name2" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "name2" }) do | log |
         log.info("name2")
       end
     end
@@ -60,7 +61,7 @@ describe RBatch::Log do
 
   describe "option by argument" do
     it "change log name" do
-      RBatch::Log.new(@vars,{:name => "name1.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "name1.log" }) do | log |
         log.info("hoge")
       end
       File::open(File.join(@log_dir , "name1.log")) {|f|
@@ -69,7 +70,7 @@ describe RBatch::Log do
     end
 
     it "change log name 2" do
-      RBatch::Log.new(@vars,{:name => "<prog><date>name.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "<prog><date>name.log" }) do | log |
         log.info("hoge")
       end
       File::open(File.join(@log_dir ,  "rspec" + Time.now.strftime("%Y%m%d") + "name.log")) {|f|
@@ -78,7 +79,7 @@ describe RBatch::Log do
     end
 
    it "change log name 3" do
-      RBatch::Log.new(@vars,{:name => "<prog>-<date>-name.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "<prog>-<date>-name.log" }) do | log |
         log.info("hoge")
       end
       File::open(File.join(@log_dir ,  "rspec-" + Time.now.strftime("%Y%m%d") + "-name.log")) {|f|
@@ -89,7 +90,7 @@ describe RBatch::Log do
     it "change log dir" do
       @tmp = File.join(ENV["RB_HOME"],"log3")
       Dir.mkdir(@tmp)
-      RBatch::Log.new(@vars,{:name => "c.log", :dir=> @tmp }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "c.log", :dir=> @tmp }) do | log |
         log.info("hoge")
       end
       File::open(File.join(@tmp , "c.log")) {|f|
@@ -100,10 +101,10 @@ describe RBatch::Log do
     end
 
     it "is append mode" do
-      RBatch::Log.new(@vars,{:append => true, :name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:append => true, :name =>  "a.log" }) do | log |
         log.info("line1")
       end
-      RBatch::Log.new(@vars,{:append => true, :name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:append => true, :name =>  "a.log" }) do | log |
         log.info("line2")
       end
       File::open(File.join(@log_dir , "a.log")) {|f|
@@ -114,10 +115,10 @@ describe RBatch::Log do
     end
 
     it "is overwrite mode" do
-      RBatch::Log.new(@vars,{:append => false, :name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:append => false, :name =>  "a.log" }) do | log |
         log.info("line1")
       end
-      RBatch::Log.new(@vars,{:append => false, :name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:append => false, :name =>  "a.log" }) do | log |
         log.info("line2")
       end
       File::open(File.join(@log_dir , "a.log")) {|f|
@@ -128,7 +129,7 @@ describe RBatch::Log do
     end
 
     it "is debug level" do
-      RBatch::Log.new(@vars,{ :level => "debug",:name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :level => "debug",:name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -146,7 +147,7 @@ describe RBatch::Log do
     end
 
     it "is info level" do
-      RBatch::Log.new(@vars,{ :level => "info",:name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :level => "info",:name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -164,7 +165,7 @@ describe RBatch::Log do
     end
 
     it "is warn level" do
-      RBatch::Log.new(@vars,{ :level => "warn",:name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :level => "warn",:name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -182,7 +183,7 @@ describe RBatch::Log do
     end
 
     it "is error level" do
-      RBatch::Log.new(@vars,{ :level => "error",:name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :level => "error",:name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -200,7 +201,7 @@ describe RBatch::Log do
     end
 
     it "is fatal level" do
-      RBatch::Log.new(@vars,{ :level => "fatal",:name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :level => "fatal",:name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -218,7 +219,7 @@ describe RBatch::Log do
     end
 
     it "is default level" do
-      RBatch::Log.new(@vars,{ :name =>  "a.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{ :name =>  "a.log" }) do | log |
         log.debug("test_debug")
         log.info("test_info")
         log.warn("test_warn")
@@ -240,7 +241,7 @@ describe RBatch::Log do
         File.join(@log_dir , (Date.today - day).strftime("%Y%m%d") + "_test_delete.log")
       end
       FileUtils.touch(loglist)
-      log = RBatch::Log.new(@vars,{ :name =>  "<date>_test_delete.log",:delete_old_log => true})
+      log = RBatch::Log.new(@vars,@journal,{ :name =>  "<date>_test_delete.log",:delete_old_log => true})
       log.close
       loglist[1..6].each do |filename|
         expect(File.exists?(filename)).to be true
@@ -255,7 +256,7 @@ describe RBatch::Log do
         File.join(@log_dir , "235959-" + (Date.today - day).strftime("%Y%m%d") + "_test_delete.log")
       end
       FileUtils.touch(loglist)
-      log = RBatch::Log.new(@vars,{ :name =>  "<time>-<date>_test_delete.log",:delete_old_log => true})
+      log = RBatch::Log.new(@vars,@journal,{ :name =>  "<time>-<date>_test_delete.log",:delete_old_log => true})
       log.close
       loglist[1..6].each do |filename|
         expect(File.exists?(filename)).to be true
@@ -266,7 +267,7 @@ describe RBatch::Log do
     end
 
     it "does not delete old log which name does not include <date>" do
-      log = RBatch::Log.new(@vars,{ :name =>  "test_delete.log",:delete_old_log => true})
+      log = RBatch::Log.new(@vars,@journal,{ :name =>  "test_delete.log",:delete_old_log => true})
       log.close
       expect(File.exists?(File.join(@log_dir,"test_delete.log"))).to be true
     end
@@ -277,7 +278,7 @@ describe RBatch::Log do
   describe "option by run_conf" do
     it "change log name" do
       @vars.merge!({:log_name => "name1.log"})
-      RBatch::Log.new(@vars) do | log |
+      RBatch::Log.new(@vars,@journal) do | log |
         log.info("hoge")
       end
       File::open(File.join(@log_dir , "name1.log")) {|f|
@@ -289,7 +290,7 @@ describe RBatch::Log do
       @tmp = File.join(ENV["RB_HOME"],"log2")
       Dir.mkdir(@tmp)
       @vars.merge!({:log_dir => @tmp})
-      RBatch::Log.new(@vars,{:name => "c.log" }) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "c.log" }) do | log |
         log.info("hoge")
       end
       File::open(File.join(@tmp , "c.log")) {|f|
@@ -302,7 +303,7 @@ describe RBatch::Log do
   describe "option both run_conf and opt" do
     it "change log name" do
       @vars.merge!({:log_name => "name1.log"})
-      RBatch::Log.new(@vars,{:name => "name2.log"}) do | log |
+      RBatch::Log.new(@vars,@journal,{:name => "name2.log"}) do | log |
         log.info("hoge")
       end
       File::open(File.join(@log_dir , "name2.log")) {|f|

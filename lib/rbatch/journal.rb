@@ -1,11 +1,15 @@
 module RBatch
   class Journal
-    @journal_verbose
-    def initialize
-      if ENV["RB_VERBOSE"]
-        @journal_verbose = ENV["RB_VERBOSE"].to_i
+    attr :journal_verbose,:user_logs
+    def initialize(verbose=nil)
+      if verbose.nil?
+        if ENV["RB_VERBOSE"]
+          @journal_verbose = ENV["RB_VERBOSE"].to_i
+        else
+          @journal_verbose = 1
+        end
       else
-        @journal_verbose = 1
+        @journal_verbose = verbose
       end
     end
     def put(level,str)

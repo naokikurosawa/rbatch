@@ -3,6 +3,7 @@ require 'fileutils'
 require 'pathname'
 require 'net/smtp'
 
+
 module RBatch
   class Log
     @@FORMATTER = proc do |severity, datetime, progname, msg|
@@ -34,20 +35,9 @@ module RBatch
     @log
     @stdout_log
 
-    # Logging Block.
-    # 
-    # ==== Params
-    # +vars+ = RBatch::Vars instance
-    # +opt+ = Option hash object.
-    # ==== Block params
-    # +log+ = Instance of +Logger+
-    # ==== Sample
-    #  RBatch::Log.new({:dir => "/tmp", :level => "info"}){ |log|
-    #    log.info "info string"
-    #  }
-    #
-    def initialize(vars,opt = nil)
+    def initialize(vars,journal,opt = nil)
       @opt = opt
+      @journal = journal
       @vars = vars.clone
       if ! opt.nil?
         # change opt key from "hoge" to "log_hoge"
@@ -80,6 +70,7 @@ module RBatch
       # delete old log
       self.delete_old_log(@vars[:log_delete_old_log_date]) if @vars[:log_delete_old_log]
       # Start logging
+      @journal.put 1,"Logging Start: \"#{@path}\""
       if block_given?
         begin
           yield self
@@ -144,7 +135,7 @@ module RBatch
                            .gsub("<date>","([0-9][0-9][0-9][0-9][0-1][0-9][0-3][0-9])")\
                          + "$")
           if r =~ file && Date.strptime($1,"%Y%m%d") <= Date.today - date
-            #RBatch.ctrl.journal 1, "Delete old log file: " + File.join(@vars[:log_dir] , file)
+            @journal.put 1, "Delete old log file: " + File.join(@vars[:log_dir] , file)
             File::delete(File.join(@vars[:log_dir]  , file))
           end
         end
