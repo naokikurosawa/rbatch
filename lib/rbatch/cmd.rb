@@ -23,35 +23,29 @@ module RBatch
   #  p result.stdout
   #  => "fileA\nfileB\n"
   #
-  # ==== Sample 3 (use instance)
-  #  require 'rbatch'
-  #  cmd = RBatch::Cmd.new("ls")
-  #  result = cmd.run
-  #  p result.stdout
-  #  => "fileA\nfileB\n"
-  #
   class Cmd
     @cmd_str
     @opt
-
+    @vars
     # Cmd instance
     #
     # ==== Params
+    # +vars+ = RBatch::Vars Instance.
     # +cmd_str+ = Command string such as "ls -l"
     # +opt+ = Option hash object.
     # - +:raise+ (Boolean) = If command exit status is not 0, raise exception. Default is false.
     # - +:timeout+ (Integer) = If command timeout , raise exception and kill process. Default is 0 sec ( 0 means disable) .
-    def initialize(run_conf,cmd_str,opt = nil)
+    def initialize(vars,cmd_str,opt = nil)
       raise(CmdException,"Command string is nil") if cmd_str.nil?
       @cmd_str = cmd_str
-      tmp = {}
-      if opt.nil?
-        @opt=run_conf.clone
-      else
+      @vars = vars.clone
+      if ! opt.nil?
+        # change opt key from "hoge" to "log_hoge"
+        tmp = {}
         opt.each_key do |key|
           tmp[("cmd_" + key.to_s).to_sym] = opt[key]
         end
-        @opt=run_conf.merge(tmp)
+        @vars.merge!(tmp)
       end
     end
 
@@ -64,24 +58,24 @@ module RBatch
       stderr_file = Tempfile::new("rbatch_tmperr",Dir.tmpdir)
       pid = spawn(@cmd_str,:out => [stdout_file,"w"],:err => [stderr_file,"w"])
       status = nil
-      if @opt[:cmd_timeout] != 0
+      if @vars[:cmd_timeout] != 0
         begin
-          timeout(@opt[:cmd_timeout]) do
+          timeout(@vars[:cmd_timeout]) do
             status =  Process.waitpid2(pid)[1] >> 8
           end
         rescue Timeout::Error => e
           begin
             Process.kill('SIGINT', pid)
-            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@opt[:cmd_timeout].to_s} sec. Success to kill process : PID=#{pid}" )
+            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Success to kill process : PID=#{pid}" )
           rescue
-            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@opt[:cmd_timeout].to_s} sec. Fail to kill process : PID=#{pid}" )
+            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Fail to kill process : PID=#{pid}" )
           end
         end
       else
         status =  Process.waitpid2(pid)[1] >> 8
       end
       result = RBatch::CmdResult.new(stdout_file,stderr_file,status,@cmd_str)
-      if @opt[:cmd_raise] && status != 0
+      if @vars[:cmd_raise] && status != 0
         raise(CmdException,"Command exit status is not 0. result: " + result.to_s)
       end
       return result

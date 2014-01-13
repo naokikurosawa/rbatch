@@ -19,6 +19,8 @@ end
 
 # main
 require 'rbatch/controller'
+require 'rbatch/vars'
+require 'rbatch/journal'
 require 'rbatch/run_conf'
 require 'rbatch/double_run_checker'
 require 'rbatch/log'

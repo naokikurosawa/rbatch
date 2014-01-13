@@ -11,6 +11,8 @@ module RBatch
       else
         @journal_verbose = verbose
       end
+      @journals = []
+      @user_logs = []
     end
     def put(level,str)
       if level <= @journal_verbose

@@ -1,42 +1,42 @@
-require 'rbatch/run_conf'
+require 'rbatch/vars'
 require 'rbatch/cmd'
 
 describe RBatch::Cmd do
   before :each do
-    @run_conf = RBatch::RunConf.new()
+    @vars = RBatch::Vars.new()
   end
 
   it "run command which status is 0" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 0;'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 0;'").run
     expect(result.stdout.chomp).to eq "1"
     expect(result.stderr.chomp).to eq "2"
     expect(result.status).to eq 0
   end
   it "run command which status is 1" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
     expect(result.stdout.chomp).to eq "1"
     expect(result.stderr.chomp).to eq "2"
     expect(result.status).to eq 1
   end
   it "raise error when command does not exist" do
     expect {
-      RBatch::Cmd.new(@run_conf, "not_exist_command").run
+      RBatch::Cmd.new(@vars, "not_exist_command").run
     }.to raise_error(Errno::ENOENT)
   end
   it "run command which stdout size is greater than 65534byte" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e '100000.times{print 0}'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e '100000.times{print 0}'").run
     expect(result.stdout.chomp.size).to eq 100000
     expect(result.stderr.chomp).to eq ""
     expect(result.status).to eq 0
   end
   it "run command which stdout size is greater than 65534bytes with status 1" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e '100000.times{print 0}; exit 1'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e '100000.times{print 0}; exit 1'").run
     expect(result.stdout.chomp.size).to eq 100000
     expect(result.stderr.chomp).to eq ""
     expect(result.status).to eq 1
   end
   it "run command which status is grater than 256" do
-    result = RBatch::Cmd.new(@run_conf,  "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 300;'").run
+    result = RBatch::Cmd.new(@vars,  "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 300;'").run
     expect(result.stdout.chomp).to eq "1"
     expect(result.stderr.chomp).to eq "2"
     case RUBY_PLATFORM
@@ -48,18 +48,18 @@ describe RBatch::Cmd do
     end
   end
   it "run to_h method" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
     expect(result.to_h[:stdout]).to eq "1"
     expect(result.to_h[:stderr]).to eq "2"
     expect(result.to_h[:status]).to eq 1
   end
   it "run to_s method" do
-    result = RBatch::Cmd.new(@run_conf, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
+    result = RBatch::Cmd.new(@vars, "ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'").run
     expect(result.to_s).to eq "{:cmd_str=>\"ruby -e 'STDOUT.print 1; STDERR.print 2; exit 1;'\", :stdout=>\"1\", :stderr=>\"2\", :status=>1}"
   end
   it "raise error when command is nil" do
     expect {
-      RBatch::Cmd.new(@run_conf,nil)
+      RBatch::Cmd.new(@vars,nil)
     }.to raise_error(RBatch::CmdException)
   end
 
@@ -68,7 +68,7 @@ describe RBatch::Cmd do
       it "raise error when command status is not 0" do
         opt = {:raise => true}
         expect {
-          RBatch::Cmd.new(@run_conf, "ruby -e 'exit 1;'",opt).run
+          RBatch::Cmd.new(@vars, "ruby -e 'exit 1;'",opt).run
         }.to raise_error(RBatch::CmdException)
       end
     end
@@ -76,13 +76,13 @@ describe RBatch::Cmd do
       it "run successfuly when command is short time" do
         opt = {:timeout => 2}
         expect {
-          RBatch::Cmd.new(@run_conf,"ruby -e 'sleep 1'",opt).run
+          RBatch::Cmd.new(@vars,"ruby -e 'sleep 1'",opt).run
         }.to_not raise_error
       end
       it "raise timeout error when command is long time" do
         opt = {:timeout => 1}
         expect {
-          RBatch::Cmd.new(@run_conf,"ruby -e 'sleep 2'",opt).run
+          RBatch::Cmd.new(@vars,"ruby -e 'sleep 2'",opt).run
         }.to raise_error(RBatch::CmdException)
       end
     end
@@ -91,23 +91,23 @@ describe RBatch::Cmd do
   describe "option by run_conf" do
     describe "raise" do
       it "raise error when command status is not 0" do
-        @run_conf[:cmd_raise] = true
+        @vars.merge!({:cmd_raise => true})
         expect {
-          RBatch::Cmd.new(@run_conf, "ruby -e 'exit 1;'").run
+          RBatch::Cmd.new(@vars, "ruby -e 'exit 1;'").run
         }.to raise_error(RBatch::CmdException)
       end
     end
     describe "timeout" do
       it "run successfuly when command is short time" do
-        @run_conf[:cmd_timeout] = 2
+        @vars.merge!({:cmd_timeout => 2})
         expect {
-          RBatch::Cmd.new(@run_conf,"ruby -e 'sleep 1'").run
+          RBatch::Cmd.new(@vars,"ruby -e 'sleep 1'").run
         }.to_not raise_error
       end
       it "raise timeout error when command is long time" do
-        @run_conf[:cmd_timeout] = 1
+        @vars.merge!({:cmd_timeout => 1})
         expect {
-          RBatch::Cmd.new(@run_conf,"ruby -e 'sleep 2'").run
+          RBatch::Cmd.new(@vars,"ruby -e 'sleep 2'").run
         }.to raise_error(RBatch::CmdException)
       end
     end
