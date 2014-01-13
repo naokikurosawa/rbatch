@@ -12,7 +12,7 @@ module RBatch
       "error" => Logger::ERROR,
       "fatal" => Logger::FATAL
     }
-    attr :name,:path,:opt,:log,:stdout_log
+    attr :name,:path,:opt,:log,:stdout_log,:run_conf
 
     # Logging Block.
     # 
@@ -25,26 +25,16 @@ module RBatch
     #    log.info "info string"
     #  }
     #
-    def initialize(opt = nil)
+    def initialize(vars,opt = nil)
+      @vars = vars.clone
       # parse option
-      tmp = {}
-      if opt.nil?
-        @opt=RBatch.run_conf.clone
-      else
+      if ! opt.nil?
+        tmp = {}
         opt.each_key do |key|
           tmp[("log_" + key.to_s).to_sym] = opt[key]
         end
-        @opt=RBatch.run_conf.merge(tmp)
+        @vars.merge!(tmp)
       end
-
-      # determine log file name
-      @name = @opt[:log_name].clone
-      @name.gsub!("<date>", Time.now.strftime("%Y%m%d"))
-      @name.gsub!("<time>", Time.now.strftime("%H%M%S"))
-      @name.gsub!("<prog>", RBatch.ctrl.program_base)
-      @name.gsub!("<host>", RBatch.ctrl.host_name)
-      @log_dir = @opt[:log_dir].gsub("<home>",RBatch.ctrl.home_dir)
-      @path = File.join(@log_dir,@name)
       # create Logger instance
       begin
         if @opt[:log_append] && File.exist?(@path)

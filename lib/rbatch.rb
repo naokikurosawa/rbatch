@@ -12,6 +12,9 @@ module RBatch
   def run_conf_path ; @@ctrl.run_conf_path ; end
   def config ; @@ctrl.config ; end
   def common_config ; @@ctrl.common_config ; end
+  def cmd(cmd_str,opt = nil)
+    RBatch::Cmd.new(run_conf,cmd_str,opt).run
+  end
 end
 
 # main

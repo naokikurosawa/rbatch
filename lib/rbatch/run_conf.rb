@@ -2,8 +2,7 @@ require 'tmpdir'
 require 'yaml'
 module RBatch
   class RunConf
-    attr :path
-    @opt
+    attr :path,:opt
     @yaml
     @@def_opt = {
       :conf_dir      => "<home>/conf",
@@ -28,19 +27,14 @@ module RBatch
       :rbatch_journal_level => 1,
       :mix_rbatch_journal_to_logs => true
     }
-    def initialize(path)
-      @path = path
-      @opt = @@def_opt.clone
-      load
-    end
-
-    def reset()
-      @opt = @@def_opt.clone
-    end
-
-    def reload()
-      reset
-      load
+    def initialize(path=nil)
+      if path.nil?
+        @opt = @@def_opt.clone
+      else
+        @path = path
+        @opt = @@def_opt.clone
+        load
+      end
     end
 
     def load()
@@ -61,6 +55,10 @@ module RBatch
       end
     end
 
+    def has_key?(key)
+      @opt.has_key?(key)
+    end
+    
     def merge!(opt)
       opt.each_key do |key|
         if @opt.has_key?(key)

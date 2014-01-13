@@ -1,7 +1,7 @@
 require 'fileutils'
 require 'tempfile'
 require 'tmpdir'
-
+require 'timeout'
 module RBatch
 
   # External command runcher.
@@ -41,17 +41,17 @@ module RBatch
     # +opt+ = Option hash object.
     # - +:raise+ (Boolean) = If command exit status is not 0, raise exception. Default is false.
     # - +:timeout+ (Integer) = If command timeout , raise exception and kill process. Default is 0 sec ( 0 means disable) .
-    def initialize(cmd_str,opt = nil)
+    def initialize(run_conf,cmd_str,opt = nil)
       raise(CmdException,"Command string is nil") if cmd_str.nil?
       @cmd_str = cmd_str
       tmp = {}
       if opt.nil?
-        @opt=RBatch.run_conf.clone
+        @opt=run_conf.clone
       else
         opt.each_key do |key|
           tmp[("cmd_" + key.to_s).to_sym] = opt[key]
         end
-        @opt=RBatch.run_conf.merge(tmp)
+        @opt=run_conf.merge(tmp)
       end
     end
 
@@ -118,12 +118,5 @@ module RBatch
   end
 
   class CmdException < Exception ; end
-
-  module_function
-
-  # shortcut of RBatch::Cmd
-  def cmd(cmd_str,opt = nil)
-    Cmd.new(cmd_str,opt).run
-  end
 
 end
