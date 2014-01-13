@@ -2,9 +2,9 @@ require 'rbatch/run_conf'
 
 module RBatch
   class Vars
-    attr :opt,:run_conf,:tmp_opt
-    def initialize
-      @tmp_opt = {}
+    attr :opt,:run_conf,:merged_opt
+    def initialize(run_conf=nil)
+      @merged_opt = {}
       @opt = {
         :program_name => $PROGRAM_NAME ,
         :program_path => File.expand_path($PROGRAM_NAME) ,
@@ -38,23 +38,26 @@ module RBatch
       @opt.merge!(@run_conf.opt)
       @opt[:common_config_path] = File.join(@opt[:conf_dir],@opt[:common_conf_name])
       @opt[:config_path] = File.join(@opt[:conf_dir],Pathname(File.basename(@opt[:program_name])).sub_ext(".yaml").to_s)
-      replace_values
     end #end def
 
-    def replace_values
-      @opt.each_key do |key|
+    def[](key)
+      if @opt.has_key?(key)
         if @opt[key].class == String
-          @opt[key] = @opt[key]
+          @opt[key]
             .gsub("<home>", @opt[:home_dir])
             .gsub("<date>", @opt[:date])
             .gsub("<time>", @opt[:time])
             .gsub("<prog>", @opt[:program_base])
             .gsub("<host>", @opt[:host_name])
+        else
+          @opt[key]
         end
+      else
+        raise RBatch::Vars::Exception, "no such key exist :" + key.to_s
       end
     end
-   
-    def[](key)
+
+    def raw_value(key)
       if @opt.has_key?(key)
         @opt[key]
       else
@@ -62,10 +65,9 @@ module RBatch
       end
     end
 
-    def add_tmp_opt(opt)
-      @tmp_opt = opt
-      @opt.merge()
-      
+    def merge!(merged_opt)
+      @merged_opt = merged_opt
+      @opt.merge!(merged_opt)
     end
 
   end

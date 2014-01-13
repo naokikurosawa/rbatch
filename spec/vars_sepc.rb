@@ -44,6 +44,14 @@ describe RBatch::Vars do
     expect(@vars[:log_dir]).to eq File.join("/var","log")
   end 
 
+  describe "merge!" do
+    it "success" do
+      @vars = RBatch::Vars.new()
+      @vars.merge!({:log_name => "hoge"})
+      expect(@vars[:log_name]).to eq "hoge"
+    end
+  end
+
   describe "run conf" do
     it "return runconf value via method missing" do
       @vars = RBatch::Vars.new()
