@@ -1,4 +1,13 @@
 require 'logger'
+
+require 'rbatch/vars'
+require 'rbatch/journal'
+require 'rbatch/run_conf'
+require 'rbatch/double_run_checker'
+require 'rbatch/log'
+require 'rbatch/config'
+require 'rbatch/cmd'
+
 module RBatch
   class Controller
     attr :vars,:config,:common_config,:journals,:user_logs
@@ -31,5 +40,13 @@ module RBatch
       end
       @journal.put 1, "Start Script : \"#{@vars[:program_path]}\""
     end #end def
+    def config ; @config ; end
+    def common_config ; @common_config ; end
+    def cmd(cmd_str,opt = nil)
+      RBatch::Cmd.new(@vars,cmd_str,opt).run
+    end
+    def log(opt=nil)
+      RBatch::Log.new(@vars,@journal,opt)
+    end
   end
 end

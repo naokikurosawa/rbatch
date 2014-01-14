@@ -4,39 +4,12 @@ require 'tmpdir'
 require 'timeout'
 module RBatch
 
-  # External command runcher.
-  #
-  #This module is a wrapper of Kernel#spawn.
-  #
-  # * Arguments(cmd_params) are inputed to Kernel#spawn directly and run command.
-  # * Return an object of RBatch::CmdResult which includes stdout, stderr, and exit status.
-  #
-  # ==== Sample 1
-  #  require 'rbatch'
-  #  result = RBatch::cmd("ls")
-  #  p result.stdout
-  #  => "fileA\nfileB\n"
-  #
-  # ==== Sample 2 (use option)
-  #  require 'rbatch'
-  #  result = RBatch::cmd("ls",{:timeout => 1})
-  #  p result.stdout
-  #  => "fileA\nfileB\n"
-  #
   class Cmd
     @cmd_str
     @opt
     @vars
-    # Cmd instance
-    #
-    # ==== Params
-    # +vars+ = RBatch::Vars Instance.
-    # +cmd_str+ = Command string such as "ls -l"
-    # +opt+ = Option hash object.
-    # - +:raise+ (Boolean) = If command exit status is not 0, raise exception. Default is false.
-    # - +:timeout+ (Integer) = If command timeout , raise exception and kill process. Default is 0 sec ( 0 means disable) .
     def initialize(vars,cmd_str,opt = nil)
-      raise(CmdException,"Command string is nil") if cmd_str.nil?
+      raise(Cmd::Exception,"Command string is nil") if cmd_str.nil?
       @cmd_str = cmd_str
       @vars = vars.clone
       if ! opt.nil?
@@ -66,9 +39,9 @@ module RBatch
         rescue Timeout::Error => e
           begin
             Process.kill('SIGINT', pid)
-            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Success to kill process : PID=#{pid}" )
+            raise(Cmd::Exception,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Success to kill process : PID=#{pid}" )
           rescue
-            raise(CmdException,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Fail to kill process : PID=#{pid}" )
+            raise(Cmd::Exception,"Run time of command \"#{@cmd_str}\" is over #{@vars[:cmd_timeout].to_s} sec. Fail to kill process : PID=#{pid}" )
           end
         end
       else
@@ -76,7 +49,7 @@ module RBatch
       end
       result = RBatch::CmdResult.new(stdout_file,stderr_file,status,@cmd_str)
       if @vars[:cmd_raise] && status != 0
-        raise(CmdException,"Command exit status is not 0. result: " + result.to_s)
+        raise(Cmd::Exception,"Command exit status is not 0. result: " + result.to_s)
       end
       return result
     end
@@ -111,6 +84,6 @@ module RBatch
     end
   end
 
-  class CmdException < Exception ; end
+  class RBatch::Cmd::Exception < Exception ; end
 
 end

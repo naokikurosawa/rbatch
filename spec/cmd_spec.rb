@@ -60,7 +60,7 @@ describe RBatch::Cmd do
   it "raise error when command is nil" do
     expect {
       RBatch::Cmd.new(@vars,nil)
-    }.to raise_error(RBatch::CmdException)
+    }.to raise_error(RBatch::Cmd::Exception)
   end
 
   describe "option by argument" do
@@ -69,7 +69,7 @@ describe RBatch::Cmd do
         opt = {:raise => true}
         expect {
           RBatch::Cmd.new(@vars, "ruby -e 'exit 1;'",opt).run
-        }.to raise_error(RBatch::CmdException)
+        }.to raise_error(RBatch::Cmd::Exception)
       end
     end
     describe "timeout" do
@@ -83,7 +83,7 @@ describe RBatch::Cmd do
         opt = {:timeout => 1}
         expect {
           RBatch::Cmd.new(@vars,"ruby -e 'sleep 2'",opt).run
-        }.to raise_error(RBatch::CmdException)
+        }.to raise_error(RBatch::Cmd::Exception)
       end
     end
   end
@@ -94,7 +94,7 @@ describe RBatch::Cmd do
         @vars.merge!({:cmd_raise => true})
         expect {
           RBatch::Cmd.new(@vars, "ruby -e 'exit 1;'").run
-        }.to raise_error(RBatch::CmdException)
+        }.to raise_error(RBatch::Cmd::Exception)
       end
     end
     describe "timeout" do
@@ -108,7 +108,7 @@ describe RBatch::Cmd do
         @vars.merge!({:cmd_timeout => 1})
         expect {
           RBatch::Cmd.new(@vars,"ruby -e 'sleep 2'").run
-        }.to raise_error(RBatch::CmdException)
+        }.to raise_error(RBatch::Cmd::Exception)
       end
     end
   end
